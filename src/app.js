@@ -50,7 +50,7 @@
   const directionInputs = document.querySelectorAll('input[name="direction"]');
 
   const levelHeight = 28;
-  const topPad = 30;
+  const topPad = 48;
 
   function selectedDirection() {
     const checked = document.querySelector('input[name="direction"]:checked');
@@ -152,18 +152,19 @@
   }
 
   function renderPanel(svg, data, x0, title, direction, maxVisibleOrder, totalHeight) {
-    const panelWidth = 350;
-    const lineStart = x0 + 22;
-    const lineEnd = x0 + 230;
+    const panelWidth = 352;
+    const panelX = x0 + 2;
+    const lineStart = panelX + 26;
+    const lineEnd = panelX + 244;
 
-    addRect(svg, x0 + 4, 8, panelWidth, totalHeight - 16, {
+    addRect(svg, panelX, 10, panelWidth, totalHeight - 20, {
       rx: '12',
       fill: '#f8fafc',
       stroke: '#cbd5e1'
     });
 
-    const titleY = direction === 'down' ? totalHeight - 14 : 24;
-    addText(svg, x0 + panelWidth / 2, titleY, title, {
+    const titleY = direction === 'down' ? totalHeight - 18 : 32;
+    addText(svg, panelX + panelWidth / 2, titleY, title, {
       'text-anchor': 'middle',
       'font-size': '16',
       'font-weight': '700',
@@ -188,12 +189,11 @@
 
       drawNucleonBalls(svg, orbital, lineStart, lineEnd, y);
 
-      addText(svg, lineEnd + 10, y + 4, orbital.label, { 'font-size': '12' });
-
-      if (orbital.state === 'partial' && orbital.occupancy % 2 === 1) {
-        const unpairedX = lineStart + (lineEnd - lineStart) * orbital.fraction;
-        addCircle(svg, unpairedX, y - 16, 4, { fill: '#b91c1c' });
-      }
+      addText(svg, lineEnd + 12, y - 6, orbital.label, {
+        'font-size': '12',
+        fill: '#0f172a',
+        'font-weight': '600'
+      });
     }
 
     for (const magic of window.magicNumbers) {
@@ -209,8 +209,12 @@
       if (!boundaryOrder || boundaryOrder > maxVisibleOrder) continue;
 
       const yPos = yForOrder(boundaryOrder, maxVisibleOrder, direction);
-      addText(svg, x0 + 8, yPos + 4, String(magic), { 'font-size': '11', fill: '#475569' });
-      addLine(svg, x0 + 20, yPos, lineStart - 4, yPos, {
+      addText(svg, panelX + 2, yPos - 6, String(magic), {
+        'font-size': '11',
+        fill: '#475569',
+        'font-weight': '600'
+      });
+      addLine(svg, panelX + 20, yPos, lineStart - 5, yPos, {
         stroke: '#cbd5e1',
         'stroke-dasharray': '2,2'
       });
@@ -223,14 +227,14 @@
     const maxVisibleOrder = Math.max(Math.max(protonMax, neutronMax) + 1, 1);
 
     const width = 760;
-    const height = topPad + (maxVisibleOrder + 2) * levelHeight;
+    const height = topPad + (maxVisibleOrder + 3) * levelHeight;
 
     container.innerHTML = '';
     const svg = makeSvgEl('svg');
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     svg.setAttribute('class', 'shell-svg');
 
-    renderPanel(svg, protonData, 18, 'Protons', direction, maxVisibleOrder, height);
+    renderPanel(svg, protonData, 16, 'Protons', direction, maxVisibleOrder, height);
     renderPanel(svg, neutronData, 390, 'Neutrons', direction, maxVisibleOrder, height);
 
     container.appendChild(svg);
@@ -245,7 +249,16 @@
 
     return filled
       .map(function (orbital) {
-        return '<span class="cfg-chip"><span class="cfg-orb">(' + orbital.label + ')</span><sup class="cfg-sup">' + orbital.occupancy + '</sup></span>';
+        return (
+          '<span class="cfg-chip">' +
+          '<span class="cfg-orb">(' +
+          orbital.label +
+          ')</span>' +
+          '<span class="cfg-occ">n=' +
+          orbital.occupancy +
+          '</span>' +
+          '</span>'
+        );
       })
       .join('');
   }
