@@ -155,8 +155,8 @@
     const panelWidth = 352;
     const panelX = x0 + 2;
     const lineStart = panelX + 26;
-    const lineEnd = panelX + 244;
-
+    const labelX = panelX + panelWidth - 4;
+    const lineEnd = labelX - 6;
     addRect(svg, panelX, 10, panelWidth, totalHeight - 20, {
       rx: '12',
       fill: '#f8fafc',
