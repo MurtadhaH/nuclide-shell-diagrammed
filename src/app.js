@@ -48,11 +48,15 @@
     if (examples.value) input.value = examples.value;
   });
 
+  function levelY(orderIndex) {
+    return 30 + (window.orbitals.length - orderIndex + 1) * levelHeight;
+  }
+
   function magicBoundaryY(magicNumber) {
     let cumulative = 0;
     for (const orbital of window.orbitals) {
       cumulative += orbital.capacity;
-      if (cumulative === magicNumber) return orbital.orderIndex * levelHeight;
+      if (cumulative === magicNumber) return levelY(orbital.orderIndex);
     }
     return null;
   }
@@ -66,7 +70,9 @@
     t.setAttribute('x', x);
     t.setAttribute('y', y);
     t.textContent = text;
-    Object.entries(attrs || {}).forEach(([k, v]) => t.setAttribute(k, v));
+    Object.entries(attrs || {}).forEach(function ([k, v]) {
+      t.setAttribute(k, v);
+    });
     svg.appendChild(t);
   }
 
@@ -76,7 +82,9 @@
     l.setAttribute('y1', y1);
     l.setAttribute('x2', x2);
     l.setAttribute('y2', y2);
-    Object.entries(attrs || {}).forEach(([k, v]) => l.setAttribute(k, v));
+    Object.entries(attrs || {}).forEach(function ([k, v]) {
+      l.setAttribute(k, v);
+    });
     svg.appendChild(l);
   }
 
@@ -85,7 +93,9 @@
     c.setAttribute('cx', cx);
     c.setAttribute('cy', cy);
     c.setAttribute('r', r);
-    Object.entries(attrs || {}).forEach(([k, v]) => c.setAttribute(k, v));
+    Object.entries(attrs || {}).forEach(function ([k, v]) {
+      c.setAttribute(k, v);
+    });
     svg.appendChild(c);
   }
 
@@ -101,7 +111,7 @@
     });
 
     for (const orbital of data) {
-      const y = 30 + orbital.orderIndex * levelHeight;
+      const y = levelY(orbital.orderIndex);
       addLine(svg, lineStart, y, lineEnd, y, { stroke: '#334155', 'stroke-width': '2' });
 
       if (orbital.fraction > 0) {
@@ -123,9 +133,8 @@
     }
 
     for (const magic of window.magicNumbers) {
-      const y = magicBoundaryY(magic);
-      if (!y) continue;
-      const yPos = y + 30;
+      const yPos = magicBoundaryY(magic);
+      if (!yPos) continue;
 
       addText(svg, x0, yPos + 4, String(magic), { 'font-size': '11', fill: '#475569' });
       addLine(svg, x0 + 14, yPos, lineStart - 4, yPos, {
@@ -150,6 +159,20 @@
     container.appendChild(svg);
   }
 
+  function configHtml(occupancy) {
+    const filled = occupancy.filter(function (orbital) {
+      return orbital.occupancy > 0;
+    });
+
+    if (!filled.length) return '<span class="cfg-empty">—</span>';
+
+    return filled
+      .map(function (orbital) {
+        return '<span class="cfg-chip"><span class="cfg-orb">(' + orbital.label + ')</span><sup class="cfg-sup">' + orbital.occupancy + '</sup></span>';
+      })
+      .join('');
+  }
+
   function plot() {
     try {
       errorEl.textContent = '';
@@ -160,8 +183,16 @@
       summary.classList.remove('hidden');
       summary.innerHTML = `
         <p><strong>${parsed.symbol}-${parsed.A}</strong> &nbsp; A=${parsed.A}, Z=${parsed.Z}, N=${parsed.N}</p>
-        <p class="spaced"><strong>Protons:</strong> ${window.configurationString(protonFill.occupancy) || '—'}</p>
-        <p><strong>Neutrons:</strong> ${window.configurationString(neutronFill.occupancy) || '—'}</p>
+
+        <div class="cfg-block spaced">
+          <div class="cfg-label">Protons</div>
+          <div class="cfg-row">${configHtml(protonFill.occupancy)}</div>
+        </div>
+
+        <div class="cfg-block">
+          <div class="cfg-label">Neutrons</div>
+          <div class="cfg-row">${configHtml(neutronFill.occupancy)}</div>
+        </div>
       `;
 
       renderShellDiagram(diagram, protonFill.occupancy, neutronFill.occupancy);

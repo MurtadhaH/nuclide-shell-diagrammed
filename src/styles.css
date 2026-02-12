@@ -93,7 +93,50 @@ button {
 }
 
 .spaced {
-  margin-top: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.cfg-block + .cfg-block {
+  margin-top: 0.55rem;
+}
+
+.cfg-label {
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cfg-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.45rem;
+}
+
+.cfg-chip {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  color: #1e293b;
+  border-radius: 999px;
+  padding: 0.2rem 0.52rem;
+  font-size: 0.86rem;
+  line-height: 1;
+}
+
+.cfg-orb {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.cfg-sup {
+  margin-left: 0.08rem;
+  font-size: 0.68rem;
+  color: #4338ca;
+}
+
+.cfg-empty {
+  color: #64748b;
 }
 
 .hidden {
