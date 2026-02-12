@@ -15,10 +15,16 @@ A frontend-only static web app that plots a schematic spherical shell-model sing
 - Computes `A`, `Z`, and `N = A - Z`
 - Uses local periodic table data (`src/data/periodicTable.js`)
 - Uses fixed shell-model orbital ordering (`src/data/orbitals.js`)
-- Two SVG columns: **Protons** and **Neutrons**
+- Two boxed SVG columns: **Protons** and **Neutrons**
+- Direction toggle by radio buttons:
+  - Bottom → Up
+  - Top → Down
+- If Bottom → Up is selected, panel titles are drawn at the bottom
 - Magic numbers: `2, 8, 20, 28, 50, 82, 126`
+- Orbitals draw filled line segments plus small nucleon balls above each line
 - Occupancy overlays (empty/full/partial) and unpaired marker for odd partial occupancy
-- Configuration strings like `(1s1/2)^2 (1p3/2)^4 (1p1/2)^1`
+- Shows only occupied levels plus one extra level above
+- Configuration strings shown as styled chips with superscript occupancy
 
 ## Run locally
 

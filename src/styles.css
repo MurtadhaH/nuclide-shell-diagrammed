@@ -55,6 +55,33 @@ h1 {
   min-width: 220px;
 }
 
+.direction-group {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.6rem;
+  padding: 0.4rem 0.6rem;
+  min-width: 180px;
+}
+
+.direction-group legend {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  padding: 0 0.2rem;
+}
+
+.direction-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.direction-group input {
+  width: auto;
+  height: auto;
+}
+
 label {
   font-size: 0.875rem;
   font-weight: 600;

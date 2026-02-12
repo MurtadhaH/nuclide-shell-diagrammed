@@ -25,6 +25,12 @@
             </select>
           </div>
 
+          <fieldset class="control-item direction-group">
+            <legend>Direction</legend>
+            <label><input type="radio" name="direction" value="down" checked /> Bottom → Up</label>
+            <label><input type="radio" name="direction" value="up" /> Top → Down</label>
+          </fieldset>
+
           <button id="plotButton">Plot</button>
         </div>
 
@@ -41,24 +47,29 @@
   const errorEl = document.querySelector('#error');
   const summary = document.querySelector('#summary');
   const examples = document.querySelector('#examples');
+  const directionInputs = document.querySelectorAll('input[name="direction"]');
 
   const levelHeight = 28;
+  const topPad = 30;
+
+  function selectedDirection() {
+    const checked = document.querySelector('input[name="direction"]:checked');
+    return checked ? checked.value : 'down';
+  }
 
   examples.addEventListener('change', function () {
     if (examples.value) input.value = examples.value;
   });
 
-  function levelY(orderIndex) {
-    return 30 + (window.orbitals.length - orderIndex + 1) * levelHeight;
-  }
+  directionInputs.forEach(function (el) {
+    el.addEventListener('change', plot);
+  });
 
-  function magicBoundaryY(magicNumber) {
-    let cumulative = 0;
-    for (const orbital of window.orbitals) {
-      cumulative += orbital.capacity;
-      if (cumulative === magicNumber) return levelY(orbital.orderIndex);
+  function yForOrder(orderIndex, maxVisibleOrder, direction) {
+    if (direction === 'down') {
+      return topPad + (maxVisibleOrder - orderIndex + 1) * levelHeight;
     }
-    return null;
+    return topPad + orderIndex * levelHeight;
   }
 
   function makeSvgEl(tag) {
@@ -99,19 +110,70 @@
     svg.appendChild(c);
   }
 
-  function renderPanel(svg, data, x0, title) {
-    const panelWidth = 360;
-    const lineStart = x0 + 20;
+  function addRect(svg, x, y, width, height, attrs) {
+    const r = makeSvgEl('rect');
+    r.setAttribute('x', x);
+    r.setAttribute('y', y);
+    r.setAttribute('width', width);
+    r.setAttribute('height', height);
+    Object.entries(attrs || {}).forEach(function ([k, v]) {
+      r.setAttribute(k, v);
+    });
+    svg.appendChild(r);
+  }
+
+  function highestOccupiedOrder(data) {
+    let maxOrder = 0;
+    for (const orbital of data) {
+      if (orbital.occupancy > 0) maxOrder = orbital.orderIndex;
+    }
+    return maxOrder;
+  }
+
+  function visibleOrbitals(data, maxVisibleOrder) {
+    return data.filter(function (orbital) {
+      return orbital.orderIndex <= maxVisibleOrder;
+    });
+  }
+
+  function drawNucleonBalls(svg, orbital, lineStart, lineEnd, y) {
+    if (orbital.occupancy <= 0) return;
+
+    const slots = orbital.capacity;
+    const spacing = (lineEnd - lineStart) / (slots + 1);
+    for (let i = 0; i < orbital.occupancy; i += 1) {
+      const cx = lineStart + spacing * (i + 1);
+      addCircle(svg, cx, y - 9, 2.8, {
+        fill: orbital.state === 'full' ? '#0f766e' : '#ea580c',
+        stroke: '#ffffff',
+        'stroke-width': '0.5'
+      });
+    }
+  }
+
+  function renderPanel(svg, data, x0, title, direction, maxVisibleOrder, totalHeight) {
+    const panelWidth = 350;
+    const lineStart = x0 + 22;
     const lineEnd = x0 + 230;
 
-    addText(svg, x0 + panelWidth / 2, 20, title, {
-      'text-anchor': 'middle',
-      'font-size': '16',
-      'font-weight': '700'
+    addRect(svg, x0 + 4, 8, panelWidth, totalHeight - 16, {
+      rx: '12',
+      fill: '#f8fafc',
+      stroke: '#cbd5e1'
     });
 
-    for (const orbital of data) {
-      const y = levelY(orbital.orderIndex);
+    const titleY = direction === 'down' ? totalHeight - 14 : 24;
+    addText(svg, x0 + panelWidth / 2, titleY, title, {
+      'text-anchor': 'middle',
+      'font-size': '16',
+      'font-weight': '700',
+      fill: '#0f172a'
+    });
+
+    const visible = visibleOrbitals(data, maxVisibleOrder);
+
+    for (const orbital of visible) {
+      const y = yForOrder(orbital.orderIndex, maxVisibleOrder, direction);
       addLine(svg, lineStart, y, lineEnd, y, { stroke: '#334155', 'stroke-width': '2' });
 
       if (orbital.fraction > 0) {
@@ -124,37 +186,52 @@
         });
       }
 
+      drawNucleonBalls(svg, orbital, lineStart, lineEnd, y);
+
       addText(svg, lineEnd + 10, y + 4, orbital.label, { 'font-size': '12' });
 
       if (orbital.state === 'partial' && orbital.occupancy % 2 === 1) {
         const unpairedX = lineStart + (lineEnd - lineStart) * orbital.fraction;
-        addCircle(svg, unpairedX, y - 8, 4, { fill: '#b91c1c' });
+        addCircle(svg, unpairedX, y - 16, 4, { fill: '#b91c1c' });
       }
     }
 
     for (const magic of window.magicNumbers) {
-      const yPos = magicBoundaryY(magic);
-      if (!yPos) continue;
+      let cumulative = 0;
+      let boundaryOrder = null;
+      for (const orbital of window.orbitals) {
+        cumulative += orbital.capacity;
+        if (cumulative === magic) {
+          boundaryOrder = orbital.orderIndex;
+          break;
+        }
+      }
+      if (!boundaryOrder || boundaryOrder > maxVisibleOrder) continue;
 
-      addText(svg, x0, yPos + 4, String(magic), { 'font-size': '11', fill: '#475569' });
-      addLine(svg, x0 + 14, yPos, lineStart - 4, yPos, {
+      const yPos = yForOrder(boundaryOrder, maxVisibleOrder, direction);
+      addText(svg, x0 + 8, yPos + 4, String(magic), { 'font-size': '11', fill: '#475569' });
+      addLine(svg, x0 + 20, yPos, lineStart - 4, yPos, {
         stroke: '#cbd5e1',
         'stroke-dasharray': '2,2'
       });
     }
   }
 
-  function renderShellDiagram(container, protonData, neutronData) {
+  function renderShellDiagram(container, protonData, neutronData, direction) {
+    const protonMax = highestOccupiedOrder(protonData);
+    const neutronMax = highestOccupiedOrder(neutronData);
+    const maxVisibleOrder = Math.max(Math.max(protonMax, neutronMax) + 1, 1);
+
     const width = 760;
-    const height = 30 + (window.orbitals.length + 1) * levelHeight;
+    const height = topPad + (maxVisibleOrder + 2) * levelHeight;
 
     container.innerHTML = '';
     const svg = makeSvgEl('svg');
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     svg.setAttribute('class', 'shell-svg');
 
-    renderPanel(svg, protonData, 18, 'Protons');
-    renderPanel(svg, neutronData, 390, 'Neutrons');
+    renderPanel(svg, protonData, 18, 'Protons', direction, maxVisibleOrder, height);
+    renderPanel(svg, neutronData, 390, 'Neutrons', direction, maxVisibleOrder, height);
 
     container.appendChild(svg);
   }
@@ -179,6 +256,7 @@
       const parsed = window.parseNuclideInput(input.value, window.periodicTable);
       const protonFill = window.fillOrbitals(parsed.Z);
       const neutronFill = window.fillOrbitals(parsed.N);
+      const direction = selectedDirection();
 
       summary.classList.remove('hidden');
       summary.innerHTML = `
@@ -195,7 +273,7 @@
         </div>
       `;
 
-      renderShellDiagram(diagram, protonFill.occupancy, neutronFill.occupancy);
+      renderShellDiagram(diagram, protonFill.occupancy, neutronFill.occupancy, direction);
     } catch (error) {
       summary.classList.add('hidden');
       diagram.innerHTML = '';
