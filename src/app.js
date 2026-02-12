@@ -189,7 +189,7 @@
 
       drawNucleonBalls(svg, orbital, lineStart, lineEnd, y);
 
-        'font-weight': '600'
+        'font-weight': '600',
         fill: '#0f172a',
         'font-weight': '600'
       });
