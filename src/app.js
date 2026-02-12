@@ -154,9 +154,9 @@
   function renderPanel(svg, data, x0, title, direction, maxVisibleOrder, totalHeight) {
     const panelWidth = 352;
     const panelX = x0 + 2;
-    const lineStart = panelX + 26;
-    const labelX = panelX + panelWidth - 4;
-    const lineEnd = labelX - 6;
+    const lineStart = panelX + 24;
+    const lineEnd = panelX + 246;
+    const labelX = lineEnd + 8;
     addRect(svg, panelX, 10, panelWidth, totalHeight - 20, {
       rx: '12',
       fill: '#f8fafc',
@@ -189,8 +189,7 @@
 
       drawNucleonBalls(svg, orbital, lineStart, lineEnd, y);
 
-      addText(svg, lineEnd + 12, y - 6, orbital.label, {
-        'font-size': '12',
+        'font-weight': '600'
         fill: '#0f172a',
         'font-weight': '600'
       });
